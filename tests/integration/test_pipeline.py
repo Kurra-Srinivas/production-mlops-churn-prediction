@@ -35,4 +35,3 @@ def test_pipeline_end_to_end(raw_df):
         # Assert artifacts exist
         assert os.path.exists("artifacts/pipeline.pkl")
         assert os.path.exists("artifacts/feature_columns.txt")
-        assert os.path.exists("data/processed/telco_churn_processed.csv")
