@@ -9,22 +9,6 @@
 
 > **An end-to-end Machine Learning and MLOps system featuring leakage-free preprocessing, Bayesian hyperparameter tuning, financial business-cost threshold optimization, real-time SHAP explainability, and containerized FastAPI + Gradio serving.**
 
----
-
-## 📌 Table of Contents
-- [Executive Overview](#-executive-overview)
-- [System Architecture](#-system-architecture)
-- [Key Engineering Highlights](#-key-engineering-highlights)
-- [Model Exploration & Benchmarks](#-model-exploration--benchmarks)
-- [Business Cost Layer & ROI Analysis](#-business-cost-layer--roi-analysis)
-- [Explainable AI (SHAP)](#-explainable-ai-shap)
-- [API & Interactive UI Reference](#-api--interactive-ui-reference)
-- [Quick Start & Local Reproduction](#-quick-start--local-reproduction)
-- [Docker Deployment](#-docker-deployment)
-- [Automated Testing](#-automated-testing)
-- [Project Directory Layout](#-project-directory-layout)
-
----
 
 ## 🚀 Executive Overview
 
