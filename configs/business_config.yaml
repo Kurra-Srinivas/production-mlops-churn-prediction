@@ -1,0 +1,15 @@
+# Business Decision Layer Configuration
+# ------------------------------------
+# Cost Matrix Assumptions (Illustrative):
+# - False Negative (FN): Customer churns undetected -> Lost Customer Lifetime Value (CLV) = $1,200
+# - False Positive (FP): Non-churner flagged -> Unnecessary Retention Campaign Cost = $50
+# Note: These values can be modified dynamically based on organization-specific financials.
+
+business_cost:
+  cost_false_negative: 1200.0
+  cost_false_positive: 50.0
+
+threshold_sweep:
+  min_threshold: 0.01
+  max_threshold: 0.99
+  step: 0.001

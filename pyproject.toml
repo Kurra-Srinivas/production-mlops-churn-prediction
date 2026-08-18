@@ -1,0 +1,64 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "telco-churn"
+version = "0.1.0"
+description = "End-to-end ML system for telecom customer churn prediction"
+requires-python = ">=3.11"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*"]
+
+# =============================================================================
+# Ruff — linter (replaces flake8 + isort + pyupgrade)
+# =============================================================================
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # pyflakes
+    "I",   # isort
+    "W",   # pycodestyle warnings
+    "UP",  # pyupgrade (modernise syntax)
+    "B",   # flake8-bugbear (likely bugs)
+]
+ignore = [
+    "E501",  # line too long — handled by formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["F841"]   # local variable assigned but never used (test fixtures)
+
+# =============================================================================
+# Black — formatter
+# =============================================================================
+[tool.black]
+line-length = 100
+target-version = ["py311"]
+
+# =============================================================================
+# pytest
+# =============================================================================
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short"
+
+# =============================================================================
+# Coverage
+# =============================================================================
+[tool.coverage.run]
+source = ["src"]
+omit = ["src/*/__init__.py", "tests/*"]
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 70
