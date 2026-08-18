@@ -23,12 +23,10 @@ from src.pipeline.preprocess import (
     NUMERIC_COLS,
     OHE_COLS,
     build_preprocessing_pipeline,
-    fit_pipeline,
     get_feature_names,
     load_pipeline,
     save_pipeline,
 )
-
 
 # ---------------------------------------------------------------------------
 # Helper: expected feature count
@@ -52,7 +50,6 @@ EXPECTED_N_FEATURES = 5 + 4 + 21  # = 30
 
 
 class TestPipelineOutputShape:
-
     def test_output_feature_count(self, fitted_pipeline, raw_df):
         """Transformed array must have exactly 30 features."""
         X = raw_df[BINARY_COLS + NUMERIC_COLS + OHE_COLS]
@@ -71,9 +68,7 @@ class TestPipelineOutputShape:
         """All output columns must be numeric (float64)."""
         X = raw_df[BINARY_COLS + NUMERIC_COLS + OHE_COLS]
         X_out = fitted_pipeline.transform(X)
-        assert np.issubdtype(X_out.dtype, np.floating), (
-            f"Expected float dtype, got {X_out.dtype}"
-        )
+        assert np.issubdtype(X_out.dtype, np.floating), f"Expected float dtype, got {X_out.dtype}"
 
     def test_single_row_output_shape(self, fitted_pipeline, sample_customer):
         """Single-row transform must work and return (1, 30) array."""
@@ -89,7 +84,6 @@ class TestPipelineOutputShape:
 
 
 class TestFeatureOrder:
-
     def test_feature_names_length(self, fitted_pipeline):
         """get_feature_names must return exactly 30 names."""
         names = get_feature_names(fitted_pipeline)
@@ -125,7 +119,6 @@ class TestFeatureOrder:
 
 
 class TestUnknownCategoryHandling:
-
     def test_unknown_internet_service_no_crash(self, fitted_pipeline, sample_customer):
         """Unknown InternetService value must not raise an exception."""
         customer = sample_customer.copy()
@@ -160,7 +153,6 @@ class TestUnknownCategoryHandling:
 
 
 class TestSerialisation:
-
     def test_save_and_load_identical_output(self, fitted_pipeline, raw_df):
         """Save → load must produce numerically identical transform output."""
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -170,7 +162,7 @@ class TestSerialisation:
 
         X = raw_df[BINARY_COLS + NUMERIC_COLS + OHE_COLS]
         out_original = fitted_pipeline.transform(X)
-        out_loaded   = loaded.transform(X)
+        out_loaded = loaded.transform(X)
         np.testing.assert_array_equal(out_original, out_loaded)
 
     def test_load_missing_file_raises(self):
@@ -180,7 +172,6 @@ class TestSerialisation:
 
 
 class TestScaleNumerics:
-
     def test_scaled_pipeline_output_shape(self, fitted_pipeline_scaled, raw_df):
         """Scaled pipeline must produce the same shape as the unscaled pipeline."""
         X = raw_df[BINARY_COLS + NUMERIC_COLS + OHE_COLS]
@@ -200,21 +191,22 @@ class TestScaleNumerics:
 
 
 class TestNoPandasGetDummies:
-
     def test_no_get_dummies_in_preprocess_module(self):
         """pd.get_dummies must not be CALLED in the preprocessing pipeline module."""
         import src.pipeline.preprocess as mod
+
         source = inspect.getsource(mod)
         # Strip comment lines and docstring-only lines, then check for actual calls
         code_lines = [
-            line for line in source.splitlines()
-            if not line.strip().startswith('#') and not line.strip().startswith('"""')
+            line
+            for line in source.splitlines()
+            if not line.strip().startswith("#")
+            and not line.strip().startswith('"""')
             and not line.strip().startswith("'")
         ]
-        code_only = '\n'.join(code_lines)
-        assert '.get_dummies(' not in code_only, (
-            "pd.get_dummies() called in src/pipeline/preprocess.py — "
-            "use OneHotEncoder instead"
+        code_only = "\n".join(code_lines)
+        assert ".get_dummies(" not in code_only, (
+            "pd.get_dummies() called in src/pipeline/preprocess.py — use OneHotEncoder instead"
         )
 
     def test_no_get_dummies_in_inference_module(self):
@@ -222,17 +214,19 @@ class TestNoPandasGetDummies:
         # Read source directly from file — avoids importing the module,
         # which would trigger eager model/pipeline loading at test time.
         import os
+
         inference_path = os.path.join("src", "serving", "inference.py")
         with open(inference_path, encoding="utf-8") as f:
             source = f.read()
         # Strip comment lines and check for actual function calls only
         code_lines = [
-            line for line in source.splitlines()
-            if not line.strip().startswith('#') and not line.strip().startswith('"""')
+            line
+            for line in source.splitlines()
+            if not line.strip().startswith("#")
+            and not line.strip().startswith('"""')
             and not line.strip().startswith("'")
         ]
-        code_only = '\n'.join(code_lines)
-        assert '.get_dummies(' not in code_only, (
-            "pd.get_dummies() called in src/serving/inference.py — "
-            "use pipeline.transform() instead"
+        code_only = "\n".join(code_lines)
+        assert ".get_dummies(" not in code_only, (
+            "pd.get_dummies() called in src/serving/inference.py — use pipeline.transform() instead"
         )

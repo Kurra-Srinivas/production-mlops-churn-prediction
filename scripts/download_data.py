@@ -19,7 +19,7 @@ def download_dataset():
         print(f"[OK] Dataset already present at: {OUTPUT_FILE}")
         return OUTPUT_FILE
 
-    print(f"[*] Downloading Telco Customer Churn dataset from public source...")
+    print("[*] Downloading Telco Customer Churn dataset from public source...")
     urllib.request.urlretrieve(DATA_URL, OUTPUT_FILE)
     print(f"[OK] Downloaded dataset to: {OUTPUT_FILE}")
     return OUTPUT_FILE

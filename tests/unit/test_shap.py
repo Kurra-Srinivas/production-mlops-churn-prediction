@@ -2,17 +2,22 @@
 Unit tests for src/pipeline/explain.py (SHAP)
 """
 
-import numpy as np
 import pandas as pd
 import pytest
 from xgboost import XGBClassifier
 
 from src.pipeline.explain import (
-    compute_shap_values,
     compute_global_importance,
+    compute_shap_values,
     explain_single_instance,
 )
-from src.pipeline.preprocess import build_preprocessing_pipeline, BINARY_COLS, NUMERIC_COLS, OHE_COLS, get_feature_names
+from src.pipeline.preprocess import (
+    BINARY_COLS,
+    NUMERIC_COLS,
+    OHE_COLS,
+    build_preprocessing_pipeline,
+    get_feature_names,
+)
 
 
 @pytest.fixture

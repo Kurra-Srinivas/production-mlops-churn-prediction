@@ -5,14 +5,16 @@ PYDANTIC DATA SCHEMAS
 Strict Pydantic v2 data models for API input validation and structured responses.
 """
 
-from typing import Literal, List, Dict, Any
-from pydantic import BaseModel, Field, ConfigDict
+from typing import Literal
+
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class CustomerData(BaseModel):
     """
     Input schema representing a single customer with all 19 required features.
     """
+
     model_config = ConfigDict(str_strip_whitespace=True, extra="forbid")
 
     # Demographics
@@ -52,6 +54,7 @@ class PredictionResponse(BaseModel):
     """
     Prediction output schema with classification outcome and probability.
     """
+
     prediction: Literal["Likely to churn", "Not likely to churn"]
     churn_probability: float
     threshold_used: float
@@ -67,10 +70,11 @@ class ExplainResponse(BaseModel):
     """
     Prediction explanation output schema with SHAP attributions.
     """
+
     prediction: Literal["Likely to churn", "Not likely to churn"]
     churn_probability: float
     base_value: float
-    top_contributing_factors: List[FactorExplanation]
+    top_contributing_factors: list[FactorExplanation]
 
 
 class HealthResponse(BaseModel):

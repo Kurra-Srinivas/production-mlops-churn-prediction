@@ -4,8 +4,7 @@ Integration tests for the end-to-end training pipeline.
 
 import os
 import tempfile
-import pandas as pd
-import pytest
+
 from scripts.run_pipeline import main as run_pipeline_main
 
 

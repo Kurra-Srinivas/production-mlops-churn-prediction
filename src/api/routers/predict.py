@@ -5,14 +5,15 @@ PREDICTION & EXPLAINABILITY ROUTER
 
 import pandas as pd
 from fastapi import APIRouter, HTTPException
+
 from src.api.schemas import (
     CustomerData,
-    PredictionResponse,
     ExplainResponse,
     FactorExplanation,
+    PredictionResponse,
 )
-from src.serving.inference import model, pipeline, FEATURE_COLS, THRESHOLD
 from src.pipeline.explain import explain_single_instance
+from src.serving.inference import FEATURE_COLS, THRESHOLD, model, pipeline
 
 router = APIRouter(tags=["Prediction & Explainability"])
 
@@ -42,7 +43,7 @@ def get_prediction(data: CustomerData):
             threshold_used=THRESHOLD,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Inference error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Inference error: {str(e)}") from e
 
 
 @router.post("/explain", response_model=ExplainResponse)
@@ -78,4 +79,4 @@ def explain_prediction(data: CustomerData):
             top_contributing_factors=factors,
         )
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Explainability error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Explainability error: {str(e)}") from e

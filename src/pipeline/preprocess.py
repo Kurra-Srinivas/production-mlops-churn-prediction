@@ -30,17 +30,14 @@ synchronised with the CustomerData schema in src/app/main.py.
 """
 
 import os
-import joblib
-from typing import Tuple
 
+import joblib
 import numpy as np
 import pandas as pd
-
 from sklearn.compose import ColumnTransformer
-from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import OrdinalEncoder, OneHotEncoder, StandardScaler
 from sklearn.impute import SimpleImputer
-
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import OneHotEncoder, OrdinalEncoder, StandardScaler
 
 # ---------------------------------------------------------------------------
 # Column taxonomy
@@ -60,7 +57,7 @@ BINARY_COLS = [
 # Numeric features passed through without transformation for tree-based models.
 # StandardScaler is applied on top for linear models (Logistic Regression).
 NUMERIC_COLS = [
-    "SeniorCitizen",       # already 0/1 integer
+    "SeniorCitizen",  # already 0/1 integer
     "tenure",
     "MonthlyCharges",
     "TotalCharges",
@@ -69,32 +66,33 @@ NUMERIC_COLS = [
 # Multi-category features one-hot encoded with drop='first' to avoid
 # multicollinearity (same behaviour as the previous pd.get_dummies approach).
 OHE_COLS = [
-    "MultipleLines",       # Yes / No / No phone service
-    "InternetService",     # DSL / Fiber optic / No
-    "OnlineSecurity",      # Yes / No / No internet service
-    "OnlineBackup",        # Yes / No / No internet service
-    "DeviceProtection",    # Yes / No / No internet service
-    "TechSupport",         # Yes / No / No internet service
-    "StreamingTV",         # Yes / No / No internet service
-    "StreamingMovies",     # Yes / No / No internet service
-    "Contract",            # Month-to-month / One year / Two year
-    "PaymentMethod",       # 4 payment methods
+    "MultipleLines",  # Yes / No / No phone service
+    "InternetService",  # DSL / Fiber optic / No
+    "OnlineSecurity",  # Yes / No / No internet service
+    "OnlineBackup",  # Yes / No / No internet service
+    "DeviceProtection",  # Yes / No / No internet service
+    "TechSupport",  # Yes / No / No internet service
+    "StreamingTV",  # Yes / No / No internet service
+    "StreamingMovies",  # Yes / No / No internet service
+    "Contract",  # Month-to-month / One year / Two year
+    "PaymentMethod",  # 4 payment methods
 ]
 
 # Explicit categories for OrdinalEncoder — guarantees the same mapping
 # whether fitting on the full dataset or on any subset.
 BINARY_CATEGORIES = [
-    ["Female", "Male"],          # gender:           Female=0, Male=1
-    ["No", "Yes"],               # Partner
-    ["No", "Yes"],               # Dependents
-    ["No", "Yes"],               # PhoneService
-    ["No", "Yes"],               # PaperlessBilling
+    ["Female", "Male"],  # gender:           Female=0, Male=1
+    ["No", "Yes"],  # Partner
+    ["No", "Yes"],  # Dependents
+    ["No", "Yes"],  # PhoneService
+    ["No", "Yes"],  # PaperlessBilling
 ]
 
 
 # ---------------------------------------------------------------------------
 # Pipeline factory
 # ---------------------------------------------------------------------------
+
 
 def build_preprocessing_pipeline(scale_numerics: bool = False) -> Pipeline:
     """
@@ -122,7 +120,7 @@ def build_preprocessing_pipeline(scale_numerics: bool = False) -> Pipeline:
             OrdinalEncoder(
                 categories=BINARY_CATEGORIES,
                 handle_unknown="use_encoded_value",
-                unknown_value=-1,        # -1 is outside [0, n_categories-1] — no clash
+                unknown_value=-1,  # -1 is outside [0, n_categories-1] — no clash
                 dtype=np.float64,
             ),
         ),
@@ -143,9 +141,9 @@ def build_preprocessing_pipeline(scale_numerics: bool = False) -> Pipeline:
         (
             "ohe",
             OneHotEncoder(
-                drop="first",            # matches previous pd.get_dummies behaviour
-                handle_unknown="ignore", # unknown category → all-zero row (safe)
-                sparse_output=False,     # dense array, required by XGBoost
+                drop="first",  # matches previous pd.get_dummies behaviour
+                handle_unknown="ignore",  # unknown category → all-zero row (safe)
+                sparse_output=False,  # dense array, required by XGBoost
                 dtype=np.float64,
             ),
         ),
@@ -156,11 +154,11 @@ def build_preprocessing_pipeline(scale_numerics: bool = False) -> Pipeline:
     #   [binary_cols] + [numeric_cols] + [ohe_expanded_cols]
     ct = ColumnTransformer(
         transformers=[
-            ("binary",  binary_pipe,  BINARY_COLS),
+            ("binary", binary_pipe, BINARY_COLS),
             ("numeric", numeric_pipe, NUMERIC_COLS),
-            ("ohe",     ohe_pipe,     OHE_COLS),
+            ("ohe", ohe_pipe, OHE_COLS),
         ],
-        remainder="drop",        # drop any unexpected columns (safe, explicit)
+        remainder="drop",  # drop any unexpected columns (safe, explicit)
         verbose_feature_names_out=False,  # clean feature names without prefix
     )
 
@@ -171,11 +169,12 @@ def build_preprocessing_pipeline(scale_numerics: bool = False) -> Pipeline:
 # Fit / transform helpers
 # ---------------------------------------------------------------------------
 
+
 def fit_pipeline(
     df: pd.DataFrame,
     target_col: str = "Churn",
     scale_numerics: bool = False,
-) -> Tuple[Pipeline, np.ndarray, np.ndarray]:
+) -> tuple[Pipeline, np.ndarray, np.ndarray]:
     """
     Fit the preprocessing pipeline on training data.
 

@@ -3,7 +3,7 @@ Unit tests for src/pipeline/evaluate.py
 """
 
 import numpy as np
-import pytest
+
 from src.pipeline.evaluate import evaluate_predictions
 
 

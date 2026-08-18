@@ -7,18 +7,16 @@ financial business costs (False Negatives vs False Positives), and selects
 the cost-optimal operating threshold.
 """
 
-from typing import Dict, Any, Tuple
 import numpy as np
 import pandas as pd
 from sklearn.metrics import (
-    precision_score,
-    recall_score,
-    f1_score,
-    roc_auc_score,
     average_precision_score,
     brier_score_loss,
     confusion_matrix,
-    classification_report,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
 )
 
 
@@ -26,7 +24,7 @@ def evaluate_predictions(
     y_true: np.ndarray,
     proba: np.ndarray,
     threshold: float = 0.5,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     Compute full classification metrics at a given threshold.
     """
@@ -55,7 +53,7 @@ def compute_business_cost(
     threshold: float,
     cost_fn: float = 1200.0,
     cost_fp: float = 50.0,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """
     Calculate the total and per-customer financial loss for a classification threshold.
 

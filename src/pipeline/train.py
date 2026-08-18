@@ -8,22 +8,23 @@ Provides factory and training functions for the baseline and candidate models:
 3. XGBoost (Gradient boosted decision tree model)
 """
 
-from typing import Dict, Any, Optional
+from typing import Any
+
 import numpy as np
-from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
 
 
 def train_logistic_regression(
     X_train: np.ndarray,
     y_train: np.ndarray,
-    params: Optional[Dict[str, Any]] = None,
+    params: dict[str, Any] | None = None,
 ) -> LogisticRegression:
     """
     Train a Logistic Regression baseline model with balanced class weighting.
     """
-    default_params: Dict[str, Any] = {
+    default_params: dict[str, Any] = {
         "class_weight": "balanced",
         "max_iter": 1000,
         "random_state": 42,
@@ -39,12 +40,12 @@ def train_logistic_regression(
 def train_random_forest(
     X_train: np.ndarray,
     y_train: np.ndarray,
-    params: Optional[Dict[str, Any]] = None,
+    params: dict[str, Any] | None = None,
 ) -> RandomForestClassifier:
     """
     Train a Random Forest ensemble baseline model.
     """
-    default_params: Dict[str, Any] = {
+    default_params: dict[str, Any] = {
         "n_estimators": 200,
         "max_depth": 8,
         "min_samples_split": 5,
@@ -64,7 +65,7 @@ def train_random_forest(
 def train_xgboost(
     X_train: np.ndarray,
     y_train: np.ndarray,
-    params: Optional[Dict[str, Any]] = None,
+    params: dict[str, Any] | None = None,
 ) -> XGBClassifier:
     """
     Train an XGBoost classifier with dynamic positive class weighting.
@@ -73,7 +74,7 @@ def train_xgboost(
     neg_count = (y_train == 0).sum()
     scale_pos_weight = float(neg_count) / float(pos_count) if pos_count > 0 else 1.0
 
-    default_params: Dict[str, Any] = {
+    default_params: dict[str, Any] = {
         "n_estimators": 301,
         "learning_rate": 0.034,
         "max_depth": 7,

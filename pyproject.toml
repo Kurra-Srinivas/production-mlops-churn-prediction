@@ -33,7 +33,9 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"tests/*" = ["F841"]   # local variable assigned but never used (test fixtures)
+"tests/*" = ["F841"]
+"scripts/*" = ["E402", "F841"]
+"notebooks/*" = ["E402", "F841", "E501"]
 
 # =============================================================================
 # Black — formatter

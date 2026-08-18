@@ -4,8 +4,8 @@ Unit tests for src/pipeline/train.py and src/pipeline/tune.py
 
 import numpy as np
 import pytest
-from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from xgboost import XGBClassifier
 
 from src.pipeline.train import (

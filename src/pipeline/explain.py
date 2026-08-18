@@ -8,7 +8,8 @@ Features:
 - Local prediction explainability (top positive and negative contributing factors)
 """
 
-from typing import Dict, Any, List, Tuple
+from typing import Any
+
 import numpy as np
 import pandas as pd
 import shap
@@ -35,26 +36,32 @@ def compute_shap_values(
 
 def compute_global_importance(
     shap_values: np.ndarray,
-    feature_names: List[str],
+    feature_names: list[str],
 ) -> pd.DataFrame:
     """
     Compute mean absolute SHAP values per feature, sorted descending.
     """
     mean_abs_shap = np.abs(shap_values).mean(axis=0)
-    df_importance = pd.DataFrame({
-        "feature": feature_names,
-        "mean_abs_shap": mean_abs_shap,
-    }).sort_values(by="mean_abs_shap", ascending=False).reset_index(drop=True)
+    df_importance = (
+        pd.DataFrame(
+            {
+                "feature": feature_names,
+                "mean_abs_shap": mean_abs_shap,
+            }
+        )
+        .sort_values(by="mean_abs_shap", ascending=False)
+        .reset_index(drop=True)
+    )
     return df_importance
 
 
 def explain_single_instance(
     model: Any,
     pipeline: Any,
-    input_dict: Dict[str, Any],
-    feature_names: List[str],
+    input_dict: dict[str, Any],
+    feature_names: list[str],
     top_k: int = 5,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Explain a single customer prediction with their top contributing risk factors.
     """
@@ -69,12 +76,14 @@ def explain_single_instance(
 
     # Rank features by absolute impact
     factors = []
-    for name, val in zip(feature_names, shap_vals):
-        factors.append({
-            "feature": name,
-            "shap_value": float(round(val, 4)),
-            "impact": "increases_churn_risk" if val > 0 else "reduces_churn_risk",
-        })
+    for name, val in zip(feature_names, shap_vals, strict=False):
+        factors.append(
+            {
+                "feature": name,
+                "shap_value": float(round(val, 4)),
+                "impact": "increases_churn_risk" if val > 0 else "reduces_churn_risk",
+            }
+        )
 
     # Sort by absolute SHAP value
     factors.sort(key=lambda x: abs(x["shap_value"]), reverse=True)

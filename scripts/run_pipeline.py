@@ -19,20 +19,18 @@ Usage:
 
 import os
 import sys
-os.environ["MLFLOW_ALLOW_FILE_STORE"] = "true"
-import time
-import json
-import argparse
-import yaml
-import joblib
 
+os.environ["MLFLOW_ALLOW_FILE_STORE"] = "true"
+import argparse
+import time
+
+import joblib
 import mlflow
 import mlflow.sklearn
 import mlflow.xgboost
-import numpy as np
-import pandas as pd
-from sklearn.model_selection import train_test_split
+import yaml
 from sklearn.metrics import classification_report
+from sklearn.model_selection import train_test_split
 
 # Project root resolution
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -41,11 +39,16 @@ if project_root not in sys.path:
 
 from src.data.load_data import load_data
 from src.data.preprocess import preprocess_data
-from src.utils.validate_data import validate_telco_data
+from src.pipeline.evaluate import (
+    compute_business_cost,
+    evaluate_predictions,
+    run_threshold_analysis,
+    select_optimal_threshold,
+)
 from src.pipeline.preprocess import (
     build_preprocessing_pipeline,
-    save_pipeline,
     get_feature_names,
+    save_pipeline,
 )
 from src.pipeline.train import (
     train_logistic_regression,
@@ -53,25 +56,20 @@ from src.pipeline.train import (
     train_xgboost,
 )
 from src.pipeline.tune import run_optuna_study
-from src.pipeline.evaluate import (
-    evaluate_predictions,
-    compute_business_cost,
-    run_threshold_analysis,
-    select_optimal_threshold,
-)
+from src.utils.validate_data import validate_telco_data
 
 
 def load_config():
     config_path = os.path.join(project_root, "configs", "model_config.yaml")
     model_cfg = {}
     if os.path.exists(config_path):
-        with open(config_path, "r") as f:
+        with open(config_path) as f:
             model_cfg = yaml.safe_load(f) or {}
 
     biz_path = os.path.join(project_root, "configs", "business_config.yaml")
     biz_cfg = {}
     if os.path.exists(biz_path):
-        with open(biz_path, "r") as f:
+        with open(biz_path) as f:
             biz_cfg = yaml.safe_load(f) or {}
 
     return model_cfg, biz_cfg
@@ -82,7 +80,10 @@ def main(args):
     cost_fn = float(biz_config.get("business_cost", {}).get("cost_false_negative", 1200.0))
     cost_fp = float(biz_config.get("business_cost", {}).get("cost_false_positive", 50.0))
 
-    mlruns_path = args.mlflow_uri or f"file:///{os.path.abspath(os.path.join(project_root, 'mlruns')).replace(os.sep, '/')}"
+    mlruns_path = (
+        args.mlflow_uri
+        or f"file:///{os.path.abspath(os.path.join(project_root, 'mlruns')).replace(os.sep, '/')}"
+    )
     mlflow.set_tracking_uri(mlruns_path)
     mlflow.set_experiment(args.experiment)
 
@@ -154,7 +155,9 @@ def main(args):
         lr_metrics = evaluate_predictions(y_test, lr_proba, threshold=eval_threshold)
         mlflow.log_metrics(lr_metrics)
         mlflow.sklearn.log_model(lr_model, name="model")
-        print(f"   [LR Baseline]  PR-AUC: {lr_metrics['pr_auc']:.3f} | ROC-AUC: {lr_metrics['roc_auc']:.3f} | F1: {lr_metrics['f1']:.3f}")
+        print(
+            f"   [LR Baseline]  PR-AUC: {lr_metrics['pr_auc']:.3f} | ROC-AUC: {lr_metrics['roc_auc']:.3f} | F1: {lr_metrics['f1']:.3f}"
+        )
 
     # --- Run 2: Random Forest Baseline ---
     with mlflow.start_run(run_name="Random_Forest_Baseline"):
@@ -164,10 +167,12 @@ def main(args):
         rf_metrics = evaluate_predictions(y_test, rf_proba, threshold=eval_threshold)
         mlflow.log_metrics(rf_metrics)
         mlflow.sklearn.log_model(rf_model, name="model")
-        print(f"   [RF Baseline]  PR-AUC: {rf_metrics['pr_auc']:.3f} | ROC-AUC: {rf_metrics['roc_auc']:.3f} | F1: {rf_metrics['f1']:.3f}")
+        print(
+            f"   [RF Baseline]  PR-AUC: {rf_metrics['pr_auc']:.3f} | ROC-AUC: {rf_metrics['roc_auc']:.3f} | F1: {rf_metrics['f1']:.3f}"
+        )
 
     # --- Run 3: XGBoost (Primary Model with optional Optuna & Automatic Threshold Selection) ---
-    with mlflow.start_run(run_name="XGBoost_Primary") as parent_run:
+    with mlflow.start_run(run_name="XGBoost_Primary"):
         mlflow.set_tag("model_family", "gradient_boosting")
         xgb_params = config.get("xgboost", {})
 
@@ -199,17 +204,27 @@ def main(args):
             print(f"\n   [THRESHOLD] Using manually specified threshold: {chosen_threshold:.3f}")
         else:
             chosen_threshold = select_optimal_threshold(val_cost_df, strategy="business_cost")
-            print(f"\n   [THRESHOLD] Automatically selected cost-optimal threshold from validation set: {chosen_threshold:.3f}")
+            print(
+                f"\n   [THRESHOLD] Automatically selected cost-optimal threshold from validation set: {chosen_threshold:.3f}"
+            )
 
         # Compute validation performance at chosen threshold
         val_cost_metrics = compute_business_cost(
-            y_true=y_val, proba=val_proba, threshold=chosen_threshold, cost_fn=cost_fn, cost_fp=cost_fp
+            y_true=y_val,
+            proba=val_proba,
+            threshold=chosen_threshold,
+            cost_fn=cost_fn,
+            cost_fp=cost_fp,
         )
         val_eval_metrics = evaluate_predictions(y_val, val_proba, threshold=chosen_threshold)
 
         print(f"   [Validation Metrics @ Threshold {chosen_threshold:.3f}]:")
-        print(f"      Precision: {val_eval_metrics['precision']:.4f} | Recall: {val_eval_metrics['recall']:.4f} | F1: {val_eval_metrics['f1']:.4f} | PR-AUC: {val_eval_metrics['pr_auc']:.4f}")
-        print(f"      FP: {val_eval_metrics['fp']} | FN: {val_eval_metrics['fn']} | Total Business Cost: ${val_cost_metrics['total_cost']:,.2f}")
+        print(
+            f"      Precision: {val_eval_metrics['precision']:.4f} | Recall: {val_eval_metrics['recall']:.4f} | F1: {val_eval_metrics['f1']:.4f} | PR-AUC: {val_eval_metrics['pr_auc']:.4f}"
+        )
+        print(
+            f"      FP: {val_eval_metrics['fp']} | FN: {val_eval_metrics['fn']} | Total Business Cost: ${val_cost_metrics['total_cost']:,.2f}"
+        )
 
         mlflow.log_params(xgb_params)
         mlflow.log_param("threshold", chosen_threshold)
@@ -229,7 +244,11 @@ def main(args):
         xgb_proba = xgb_model.predict_proba(X_test_tree)[:, 1]
         test_metrics = evaluate_predictions(y_test, xgb_proba, threshold=chosen_threshold)
         test_cost_metrics = compute_business_cost(
-            y_true=y_test, proba=xgb_proba, threshold=chosen_threshold, cost_fn=cost_fn, cost_fp=cost_fp
+            y_true=y_test,
+            proba=xgb_proba,
+            threshold=chosen_threshold,
+            cost_fn=cost_fn,
+            cost_fp=cost_fp,
         )
 
         mlflow.log_metrics(test_metrics)
@@ -237,10 +256,18 @@ def main(args):
         mlflow.log_metric("test_cost_per_customer", test_cost_metrics["cost_per_customer"])
 
         print(f"\n   [Final TEST Metrics @ Threshold {chosen_threshold:.3f}]:")
-        print(f"      PR-AUC: {test_metrics['pr_auc']:.4f} | ROC-AUC: {test_metrics['roc_auc']:.4f}")
-        print(f"      Precision: {test_metrics['precision']:.4f} | Recall: {test_metrics['recall']:.4f} | F1: {test_metrics['f1']:.4f}")
-        print(f"      TP: {test_metrics['tp']} | FP: {test_metrics['fp']} | TN: {test_metrics['tn']} | FN: {test_metrics['fn']}")
-        print(f"      Total Business Cost: ${test_cost_metrics['total_cost']:,.2f} | Cost/Customer: ${test_cost_metrics['cost_per_customer']:.2f}")
+        print(
+            f"      PR-AUC: {test_metrics['pr_auc']:.4f} | ROC-AUC: {test_metrics['roc_auc']:.4f}"
+        )
+        print(
+            f"      Precision: {test_metrics['precision']:.4f} | Recall: {test_metrics['recall']:.4f} | F1: {test_metrics['f1']:.4f}"
+        )
+        print(
+            f"      TP: {test_metrics['tp']} | FP: {test_metrics['fp']} | TN: {test_metrics['tn']} | FN: {test_metrics['fn']}"
+        )
+        print(
+            f"      Total Business Cost: ${test_cost_metrics['total_cost']:,.2f} | Cost/Customer: ${test_cost_metrics['cost_per_customer']:.2f}"
+        )
 
         # Save model to local artifacts directory for direct fast serving
         model_dir = os.path.join(artifacts_dir, "model")
@@ -263,7 +290,12 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser(description="Telco Churn Training Pipeline")
     p.add_argument("--input", type=str, required=True, help="Path to raw dataset CSV")
     p.add_argument("--target", type=str, default="Churn")
-    p.add_argument("--threshold", type=float, default=None, help="Decision threshold (if omitted, automatically optimized on validation set)")
+    p.add_argument(
+        "--threshold",
+        type=float,
+        default=None,
+        help="Decision threshold (if omitted, automatically optimized on validation set)",
+    )
     p.add_argument("--test_size", type=float, default=0.2)
     p.add_argument("--tune", action="store_true", help="Enable Optuna hyperparameter tuning")
     p.add_argument("--n_trials", type=int, default=30, help="Number of Optuna trials")

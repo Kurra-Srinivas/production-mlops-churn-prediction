@@ -6,11 +6,10 @@ FastAPI application integrating modular REST routers for prediction, explainabil
 health checks, and an interactive Gradio UI.
 """
 
-import os
-from fastapi import FastAPI
 import gradio as gr
+from fastapi import FastAPI
 
-from src.api.routers import predict, health
+from src.api.routers import health, predict
 from src.serving.inference import predict as model_predict
 
 # ---------------------------------------------------------------------------
@@ -46,13 +45,27 @@ def root():
 # Gradio UI Integration
 # ---------------------------------------------------------------------------
 
+
 def gradio_predict(
-    gender, SeniorCitizen, Partner, Dependents,
-    tenure, Contract, PaperlessBilling, PaymentMethod,
-    MonthlyCharges, TotalCharges,
-    PhoneService, MultipleLines,
-    InternetService, OnlineSecurity, OnlineBackup,
-    DeviceProtection, TechSupport, StreamingTV, StreamingMovies,
+    gender,
+    SeniorCitizen,
+    Partner,
+    Dependents,
+    tenure,
+    Contract,
+    PaperlessBilling,
+    PaymentMethod,
+    MonthlyCharges,
+    TotalCharges,
+    PhoneService,
+    MultipleLines,
+    InternetService,
+    OnlineSecurity,
+    OnlineBackup,
+    DeviceProtection,
+    TechSupport,
+    StreamingTV,
+    StreamingMovies,
 ):
     data = {
         "gender": gender,
@@ -89,12 +102,19 @@ demo = gr.Interface(
         gr.Dropdown(["Yes", "No"], label="Partner", value="No"),
         gr.Dropdown(["Yes", "No"], label="Dependents", value="No"),
         gr.Number(label="Tenure (months)", value=1, minimum=0, maximum=120),
-        gr.Dropdown(["Month-to-month", "One year", "Two year"], label="Contract", value="Month-to-month"),
+        gr.Dropdown(
+            ["Month-to-month", "One year", "Two year"], label="Contract", value="Month-to-month"
+        ),
         gr.Dropdown(["Yes", "No"], label="Paperless Billing", value="Yes"),
         gr.Dropdown(
-            ["Electronic check", "Mailed check",
-             "Bank transfer (automatic)", "Credit card (automatic)"],
-            label="Payment Method", value="Electronic check",
+            [
+                "Electronic check",
+                "Mailed check",
+                "Bank transfer (automatic)",
+                "Credit card (automatic)",
+            ],
+            label="Payment Method",
+            value="Electronic check",
         ),
         gr.Number(label="Monthly Charges ($)", value=85.0, minimum=0),
         gr.Number(label="Total Charges ($)", value=85.0, minimum=0),

@@ -7,11 +7,13 @@ with MLflow nested child runs for full experiment traceability.
 """
 
 import os
+
 os.environ["MLFLOW_ALLOW_FILE_STORE"] = "true"
-from typing import Dict, Any
+from typing import Any
+
+import mlflow
 import numpy as np
 import optuna
-import mlflow
 from sklearn.metrics import average_precision_score
 from xgboost import XGBClassifier
 
@@ -22,7 +24,7 @@ def run_optuna_study(
     X_val: np.ndarray,
     y_val: np.ndarray,
     n_trials: int = 30,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """
     Run an Optuna study to find optimal hyperparameters for XGBoost.
 

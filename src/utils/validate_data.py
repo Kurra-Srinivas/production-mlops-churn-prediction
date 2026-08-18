@@ -24,9 +24,7 @@ Usage:
     is_valid, failed = validate_telco_data(df)
 """
 
-from typing import Tuple, List
 import pandas as pd
-
 
 # ---------------------------------------------------------------------------
 # Expectation definitions
@@ -34,13 +32,14 @@ import pandas as pd
 # Each entry is (check_name, callable -> bool, description).
 # The callable receives the DataFrame and returns True when the check PASSES.
 
-def _check_column_exists(df: pd.DataFrame, col: str) -> Tuple[bool, str]:
+
+def _check_column_exists(df: pd.DataFrame, col: str) -> tuple[bool, str]:
     """expect_column_to_exist"""
     passed = col in df.columns
     return passed, f"expect_column_to_exist: '{col}'"
 
 
-def _check_not_null(df: pd.DataFrame, col: str, mostly: float = 1.0) -> Tuple[bool, str]:
+def _check_not_null(df: pd.DataFrame, col: str, mostly: float = 1.0) -> tuple[bool, str]:
     """expect_column_values_to_not_be_null"""
     if col not in df.columns:
         return False, f"expect_column_values_to_not_be_null: '{col}' (column missing)"
@@ -49,7 +48,9 @@ def _check_not_null(df: pd.DataFrame, col: str, mostly: float = 1.0) -> Tuple[bo
     return passed, f"expect_column_values_to_not_be_null: '{col}' (null_rate={null_rate:.3f})"
 
 
-def _check_in_set(df: pd.DataFrame, col: str, valid_values: set, mostly: float = 1.0) -> Tuple[bool, str]:
+def _check_in_set(
+    df: pd.DataFrame, col: str, valid_values: set, mostly: float = 1.0
+) -> tuple[bool, str]:
     """expect_column_values_to_be_in_set"""
     if col not in df.columns:
         return False, f"expect_column_values_to_be_in_set: '{col}' (column missing)"
@@ -63,10 +64,12 @@ def _check_in_set(df: pd.DataFrame, col: str, valid_values: set, mostly: float =
 
 
 def _check_between(
-    df: pd.DataFrame, col: str,
-    min_value: float = None, max_value: float = None,
+    df: pd.DataFrame,
+    col: str,
+    min_value: float = None,
+    max_value: float = None,
     mostly: float = 1.0,
-) -> Tuple[bool, str]:
+) -> tuple[bool, str]:
     """expect_column_values_to_be_between"""
     if col not in df.columns:
         return False, f"expect_column_values_to_be_between: '{col}' (column missing)"
@@ -76,7 +79,7 @@ def _check_between(
         out_of_range |= numeric < min_value
     if max_value is not None:
         out_of_range |= numeric > max_value
-    out_of_range &= numeric.notna()   # ignore nulls — separate null check
+    out_of_range &= numeric.notna()  # ignore nulls — separate null check
     violation_rate = out_of_range.mean()
     passed = violation_rate <= (1.0 - mostly)
     return passed, (
@@ -86,11 +89,14 @@ def _check_between(
 
 
 def _check_pair_A_gte_B(
-    df: pd.DataFrame, col_a: str, col_b: str, mostly: float = 0.95,
-) -> Tuple[bool, str]:
+    df: pd.DataFrame,
+    col_a: str,
+    col_b: str,
+    mostly: float = 0.95,
+) -> tuple[bool, str]:
     """expect_column_pair_values_A_to_be_greater_than_B (or_equal=True)"""
     if col_a not in df.columns or col_b not in df.columns:
-        return False, f"expect_column_pair_A_gte_B: missing column(s)"
+        return False, "expect_column_pair_A_gte_B: missing column(s)"
     a = pd.to_numeric(df[col_a], errors="coerce")
     b = pd.to_numeric(df[col_b], errors="coerce")
     both_present = a.notna() & b.notna()
@@ -107,7 +113,8 @@ def _check_pair_A_gte_B(
 # Public validation function
 # ---------------------------------------------------------------------------
 
-def validate_telco_data(df: pd.DataFrame) -> Tuple[bool, List[str]]:
+
+def validate_telco_data(df: pd.DataFrame) -> tuple[bool, list[str]]:
     """
     Run the full validation suite on the Telco Customer Churn dataset.
 
@@ -125,14 +132,21 @@ def validate_telco_data(df: pd.DataFrame) -> Tuple[bool, List[str]]:
     """
     print("[*] Starting data validation...")
 
-    results: List[Tuple[bool, str]] = []
+    results: list[tuple[bool, str]] = []
 
     # --- 1. Schema: required columns ---
     print("   [+] Schema checks...")
     required_cols = [
-        "customerID", "gender", "Partner", "Dependents",
-        "PhoneService", "InternetService", "Contract",
-        "tenure", "MonthlyCharges", "TotalCharges",
+        "customerID",
+        "gender",
+        "Partner",
+        "Dependents",
+        "PhoneService",
+        "InternetService",
+        "Contract",
+        "tenure",
+        "MonthlyCharges",
+        "TotalCharges",
     ]
     for col in required_cols:
         results.append(_check_column_exists(df, col))
@@ -142,19 +156,18 @@ def validate_telco_data(df: pd.DataFrame) -> Tuple[bool, List[str]]:
 
     # --- 2. Business logic: allowed categorical values ---
     print("   [+] Business logic checks...")
-    results.append(_check_in_set(df, "gender",          {"Male", "Female"}))
-    results.append(_check_in_set(df, "Partner",         {"Yes", "No"}))
-    results.append(_check_in_set(df, "Dependents",      {"Yes", "No"}))
-    results.append(_check_in_set(df, "PhoneService",    {"Yes", "No"}))
+    results.append(_check_in_set(df, "gender", {"Male", "Female"}))
+    results.append(_check_in_set(df, "Partner", {"Yes", "No"}))
+    results.append(_check_in_set(df, "Dependents", {"Yes", "No"}))
+    results.append(_check_in_set(df, "PhoneService", {"Yes", "No"}))
     results.append(_check_in_set(df, "InternetService", {"DSL", "Fiber optic", "No"}))
-    results.append(_check_in_set(df, "Contract",
-        {"Month-to-month", "One year", "Two year"}))
+    results.append(_check_in_set(df, "Contract", {"Month-to-month", "One year", "Two year"}))
 
     # --- 3. Numeric ranges ---
     print("   [+] Numeric range checks...")
-    results.append(_check_between(df, "tenure",         min_value=0, max_value=120))
+    results.append(_check_between(df, "tenure", min_value=0, max_value=120))
     results.append(_check_between(df, "MonthlyCharges", min_value=0, max_value=200))
-    results.append(_check_between(df, "TotalCharges",   min_value=0))
+    results.append(_check_between(df, "TotalCharges", min_value=0))
 
     # --- 4. Null checks on critical numeric features ---
     results.append(_check_not_null(df, "tenure"))
@@ -171,9 +184,9 @@ def validate_telco_data(df: pd.DataFrame) -> Tuple[bool, List[str]]:
     failed = [r for r in results if not r[0]]
     failed_descriptions = [desc for _, desc in failed]
 
-    total   = len(results)
-    n_pass  = len(passed)
-    n_fail  = len(failed)
+    total = len(results)
+    n_pass = len(passed)
+    n_fail = len(failed)
     is_valid = n_fail == 0
 
     if is_valid:

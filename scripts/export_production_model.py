@@ -8,9 +8,10 @@ Extracts the latest Production model artifacts + preprocessing pipeline from MLf
 and places them in a self-contained directory for Docker building.
 """
 
+import argparse
 import os
 import shutil
-import argparse
+
 import mlflow
 from mlflow.tracking import MlflowClient
 

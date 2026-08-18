@@ -6,11 +6,12 @@ Loads the trained model and fitted sklearn preprocessing pipeline at startup,
 then uses them to predict customer churn from raw input data.
 """
 
-import os
 import glob
+import os
+
 import joblib
-import pandas as pd
 import mlflow
+import pandas as pd
 
 from src.pipeline.preprocess import load_pipeline
 
@@ -18,14 +19,15 @@ from src.pipeline.preprocess import load_pipeline
 # Configuration from environment
 # ---------------------------------------------------------------------------
 
-MODEL_DIR     = os.environ.get("MODEL_DIR",     "/app/model")
+MODEL_DIR = os.environ.get("MODEL_DIR", "/app/model")
 PIPELINE_PATH = os.environ.get("PIPELINE_PATH", "/app/model/pipeline.pkl")
-THRESHOLD     = float(os.environ.get("PREDICTION_THRESHOLD", "0.35"))
+THRESHOLD = float(os.environ.get("PREDICTION_THRESHOLD", "0.35"))
 
 
 # ---------------------------------------------------------------------------
 # Pipeline loading
 # ---------------------------------------------------------------------------
+
 
 def _load_pipeline():
     """Load the fitted sklearn preprocessing pipeline."""
@@ -48,6 +50,7 @@ pipeline = _load_pipeline()
 # ---------------------------------------------------------------------------
 # Model loading
 # ---------------------------------------------------------------------------
+
 
 def _load_model():
     """Load the trained model (joblib or MLflow pyfunc)."""
@@ -80,7 +83,9 @@ def _load_model():
             pass
 
     # Priority 4: Search mlruns / models
-    mlflow_models = glob.glob("./mlruns/*/*/artifacts/model") + glob.glob("./mlruns/*/models/*/artifacts/model")
+    mlflow_models = glob.glob("./mlruns/*/*/artifacts/model") + glob.glob(
+        "./mlruns/*/models/*/artifacts/model"
+    )
     if mlflow_models:
         try:
             latest = max(mlflow_models, key=os.path.getmtime)
@@ -100,6 +105,7 @@ model = _load_model()
 # ---------------------------------------------------------------------------
 # Feature schema loading
 # ---------------------------------------------------------------------------
+
 
 def _load_feature_names() -> list[str]:
     """Load the feature column list written during training."""
@@ -122,6 +128,7 @@ FEATURE_COLS = _load_feature_names()
 # ---------------------------------------------------------------------------
 # Public prediction function
 # ---------------------------------------------------------------------------
+
 
 def predict(input_dict: dict) -> str:
     """

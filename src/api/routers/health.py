@@ -4,6 +4,7 @@ HEALTH & READINESS ENDPOINTS
 """
 
 from fastapi import APIRouter
+
 from src.api.schemas import HealthResponse
 
 router = APIRouter(tags=["Health"])
@@ -15,6 +16,7 @@ def health_check():
     Service health check verifying model and pipeline readiness.
     """
     from src.serving.inference import model, pipeline
+
     model_ok = model is not None
     pipeline_ok = pipeline is not None
 
@@ -31,6 +33,7 @@ def readiness_check():
     Kubernetes / Container readiness probe endpoint.
     """
     from src.serving.inference import model, pipeline
+
     if model is None or pipeline is None:
         return {"ready": False}, 503
     return {"ready": True}
